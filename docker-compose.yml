@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+
+  # Node 20
+  nodeapp:
+    container_name: "image-management"
+    restart: always
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    tty: true
+    ports:
+      - "${DOCKER_CONTAINER_PORT:-3000}:${APP_PORT:-3000}"
+    volumes:
+      - ./:/var/www

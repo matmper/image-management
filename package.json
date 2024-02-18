@@ -1,0 +1,26 @@
+{
+  "name": "image-management",
+  "version": "1.0.0",
+  "description": "TypeScript image management repository for studies",
+  "main": "index.js",
+  "scripts": {
+    "watch": "npx nodemon ./src/index.ts",
+    "build": "rimraf ./dist && tsc",
+    "start": "node dist/index.js",
+    "test": "node --test --require ts-node/register ./test/**/*.test.ts"
+  },
+  "keywords": [
+    "image",
+    "studies"
+  ],
+  "author": "https://github.com/matmper",
+  "license": "MIT",
+  "devDependencies": {
+    "@faker-js/faker": "^8.4.1",
+    "@types/node": "^20.11.19",
+    "nodemon": "^3.0.3",
+    "rimraf": "^5.0.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}

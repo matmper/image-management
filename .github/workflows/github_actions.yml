@@ -23,6 +23,9 @@ jobs:
     - name: Node Modules Install
       run: npm install
 
+    - name: Application Lint
+      run: npm run lint
+
     - name: Application Build
       run: npm run build
 

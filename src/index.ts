@@ -1,5 +1,5 @@
 import http from "http"
-import Route from "./routes/route";
+import Route from "./routes/route"
 
 // Check if exists values to basic auth (user and password)
 if (!process.env.AUTH_USER || !process.env.AUTH_PASS) {
@@ -7,11 +7,11 @@ if (!process.env.AUTH_USER || !process.env.AUTH_PASS) {
 }
 
 // Create application http server
-const server = http.createServer(async (req: any, res: any) => {
+const server = http.createServer(async (req: http.IncomingMessage, res: http.ServerResponse) => {
   res.setHeader("Content-Type", "application/json");
 
   const response = new Route
-  const json = await response.handle(req, res)
+  const json = await response.handle(req)
 
   res.writeHead(json.code)
   res.end(JSON.stringify(json.message))
@@ -20,5 +20,6 @@ const server = http.createServer(async (req: any, res: any) => {
 const port = process.env.APP_PORT || 3000
 
 server.listen(process.env.APP_PORT, () => {
-  console.log(`Server is running on Port ${port}`);
+  // eslint-disable-next-line no-console
+  console.info(`Server is running on Port ${port}`);
 });

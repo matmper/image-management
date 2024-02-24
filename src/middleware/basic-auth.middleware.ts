@@ -1,3 +1,4 @@
+import { IncomingMessage } from "http";
 import NotAuthorizedError from "../errors/not-authorized.error";
 
 export default class BasicAuthMiddleware {
@@ -6,7 +7,7 @@ export default class BasicAuthMiddleware {
    * @param req
    * @returns Promise<void>
    */
-  async handle(req: any): Promise<void> {
+  async handle(req: IncomingMessage): Promise<void> {
     const auth = req.headers.authorization
 
     if (!auth || auth.indexOf('Basic ') === -1) {

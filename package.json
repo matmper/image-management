@@ -7,7 +7,8 @@
     "watch": "npx nodemon ./src/index.ts",
     "build": "rimraf ./dist && tsc",
     "start": "node dist/index.js",
-    "test": "node --test --require ts-node/register ./test/**/*.test.ts"
+    "test": "node --test --require ts-node/register ./test/**/*.test.ts",
+    "prepare": "husky"
   },
   "keywords": [
     "image",
@@ -21,6 +22,7 @@
     "nodemon": "^3.0.3",
     "rimraf": "^5.0.5",
     "ts-node": "^10.9.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "husky": "^9.0.11"
   }
 }

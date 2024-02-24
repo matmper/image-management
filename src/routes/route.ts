@@ -1,8 +1,9 @@
-import FileController from "../controllers/file.controller";
-import PageController from "../controllers/page.controller";
-import NotAuthorizedError from "../errors/not-authorized.error";
-import PageNotFoundError from "../errors/page-not-found.error";
-import RouteDTO from "../types/route.dto";
+import { IncomingMessage } from "http"
+import FileController from "../controllers/file.controller"
+import PageController from "../controllers/page.controller"
+import NotAuthorizedError from "../errors/not-authorized.error"
+import PageNotFoundError from "../errors/page-not-found.error"
+import RouteDTO from "../types/route.dto"
 
 export default class Route {
   /**
@@ -11,7 +12,7 @@ export default class Route {
    * @param res any
    * @returns Promise<RouteDTO>
    */
-  async handle(req: any, res: any): Promise<RouteDTO> {
+  async handle(req: IncomingMessage): Promise<RouteDTO> {
     try {
       const url = req.url.split('?')[0]
 

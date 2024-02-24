@@ -1,3 +1,4 @@
+import { IncomingMessage } from "http"
 import BasicAuthMiddleware from "../middleware/basic-auth.middleware"
 import ResponseDTO from "../types/response.dto"
 
@@ -7,7 +8,7 @@ export default class FileController {
    * @param req
    * @returns Promise<ResponseDTO>
    */
-  async show(req: object): Promise<ResponseDTO> {
+  async show(req: IncomingMessage): Promise<ResponseDTO> {
     const middleware = new BasicAuthMiddleware
     await middleware.handle(req)
 
@@ -19,7 +20,7 @@ export default class FileController {
    * @param req
    * @returns Promise<ResponseDTO>
    */
-  async store(req: object): Promise<ResponseDTO> {
+  async store(req: IncomingMessage): Promise<ResponseDTO> {
     const middleware = new BasicAuthMiddleware
     await middleware.handle(req)
 

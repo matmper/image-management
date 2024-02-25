@@ -1,6 +1,7 @@
 # Logs
 logs/
 *.log
+.DS_Store
 
 # Modules
 node_modules/
@@ -15,3 +16,4 @@ dist/
 
 # Files
 storage/
+storage/**

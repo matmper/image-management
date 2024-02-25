@@ -53,7 +53,7 @@ export default class Route {
       } else if (error instanceof PageNotFoundError) {
         return { code: 404, message: {data: {error: "Page not found"}, meta: {code: 404}}}
       } else {
-        return { code: 500, message: {data: {error: error}, meta: {code: 500}}}
+        return { code: 500, message: {data: {error: error.message}, meta: {code: 500}}}
       }
     }
   }

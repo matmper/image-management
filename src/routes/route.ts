@@ -1,9 +1,11 @@
 import { IncomingMessage } from "http"
 import FileController from "../controllers/file.controller"
 import PageController from "../controllers/page.controller"
+import UploadController from "../controllers/upload.controller"
 import NotAuthorizedError from "../errors/not-authorized.error"
 import PageNotFoundError from "../errors/page-not-found.error"
 import RouteDTO from "../types/route.dto"
+import BadRequestError from "../errors/bad-request.error"
 
 export default class Route {
   /**
@@ -40,7 +42,7 @@ export default class Route {
       // Routes: POST
       if (req.method === "POST") {
         if (url === "/files") {
-          const controller = new FileController
+          const controller = new UploadController
           const message = await controller.store(req)
           return { code: 201, message: message }
         }
@@ -48,7 +50,9 @@ export default class Route {
 
       throw new PageNotFoundError
     } catch (error) {
-      if (error instanceof NotAuthorizedError) {
+      if (error instanceof BadRequestError) {
+        return { code: 400, message: {data: {error: error.message}, meta: {code: 400}}}
+      } else if (error instanceof NotAuthorizedError) {
         return { code: 403, message: {data: {error: "Not authorized"}, meta: {code: 403}}}
       } else if (error instanceof PageNotFoundError) {
         return { code: 404, message: {data: {error: "Page not found"}, meta: {code: 404}}}

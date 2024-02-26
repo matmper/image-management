@@ -17,10 +17,6 @@ describe('Pages - Unit', async () => {
       STORAGE_PATH: 'storage/test',
       STORAGE_MAX_SIZE: '5'
     }
-
-    if (!fs.existsSync(path.resolve('storage/test'))) {
-      fs.mkdirSync(path.resolve('storage/test'));
-    }
   })
 
   after(() => {
@@ -39,15 +35,15 @@ describe('Pages - Unit', async () => {
       headers: {
         'authorization': authorization,
         'content-length': image.length,
-        'content-type': 'multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW',
+        'content-type': 'multipart/form-data; boundary=--------------------------659543434561705972292758',
       }
     })
 
-    req.push(`------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n`)
+    req.push(`--------------------------659543434561705972292758\r\n`)
     req.push(`Content-Disposition: form-data; name="file"; filename="image.jpg"\r\n`)
     req.push(`Content-Type: image/jpeg\r\n\r\n`)
     req.push(image)
-    req.push(`\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n`)
+    req.push(`\r\n--------------------------659543434561705972292758--\r\n`)
     req.push(null)
 
     const controller = new UploadController
@@ -56,7 +52,7 @@ describe('Pages - Unit', async () => {
     assert.strictEqual(JSON.stringify(response), JSON.stringify({
       data: {
         file: {
-          path: path.resolve('storage/test'),
+          path: process.env.STORAGE_PATH,
           name: response.data.file.name,
           ext: 'jpg'
         },

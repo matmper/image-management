@@ -43,7 +43,6 @@ export default class UploadController {
       })
 
       req.on("end", () => {
-        console.log(fileData)
         const fieldNameStartIndex = fileData.indexOf('name="') + 'name="'.length
         const fieldNameEndIndex = fileData.indexOf('"', fieldNameStartIndex)
         const fieldName = fileData.substring(fieldNameStartIndex, fieldNameEndIndex)

@@ -1,6 +1,10 @@
 interface ResponseDTO {
-  data: object;
-  meta: object;
+  data: {
+    [key: string]: any;
+  };
+  meta: {
+    [key: string]: any;
+  };
 }
 
 export default ResponseDTO;

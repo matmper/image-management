@@ -17,3 +17,4 @@ dist/
 # Files
 storage/
 storage/**
+storage/test

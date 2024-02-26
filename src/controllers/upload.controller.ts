@@ -19,11 +19,11 @@ export default class UploadController {
       throw new BadRequestError('Request content type header is required')
     }
 
-    const contentTypeHeader = req.headers['content-type'].split('; ')
+    const contentType = req.headers['content-type'].split(';')[0]
     const contentLength = parseInt(req.headers['content-length'])
     const maxFileSize = process.env.STORAGE_MAX_SIZE ? parseInt(process.env.STORAGE_MAX_SIZE) : 5 // Mb
 
-    if (contentTypeHeader[0] !== 'multipart/form-data') {
+    if (contentType !== 'multipart/form-data') {
       throw new BadRequestError('Request content type is not valid')
     }
 
@@ -43,6 +43,7 @@ export default class UploadController {
       })
 
       req.on("end", () => {
+        console.log(fileData)
         const fieldNameStartIndex = fileData.indexOf('name="') + 'name="'.length
         const fieldNameEndIndex = fileData.indexOf('"', fieldNameStartIndex)
         const fieldName = fileData.substring(fieldNameStartIndex, fieldNameEndIndex)

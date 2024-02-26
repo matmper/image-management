@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, mock, test } from "node:test"
+import { after, before, describe, test } from "node:test"
 import { faker } from '@faker-js/faker'
 import mockHttp from 'mock-http'
 import assert from 'node:assert/strict'
@@ -8,7 +8,7 @@ import NotAuthorizedError from "../../src/errors/not-authorized.error"
 describe('Middlewares - Unit', async () => {
   const env = process.env;
 
-  beforeEach(() => {
+  before(() => {
     process.env = {
       ...env,
       AUTH_USER: faker.string.alphanumeric(10),
@@ -16,9 +16,8 @@ describe('Middlewares - Unit', async () => {
     }
   })
 
-  afterEach(() => {
-    process.env = env;
-    mock.reset()
+  after(() => {
+    process.env = env
   });
 
   test("basic auth middleware", async () => {

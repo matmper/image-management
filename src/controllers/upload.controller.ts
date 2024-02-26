@@ -32,7 +32,7 @@ export default class UploadController {
     }
 
     if (contentLength > (1024 * 1024 * maxFileSize)) {
-      throw new BadRequestError(`File size larger than ${maxFileSize}Mb`)
+      throw new BadRequestError(`File size larger than allowed`)
     }
 
     return await new Promise((resolve, reject) => {
@@ -43,38 +43,37 @@ export default class UploadController {
       })
 
       req.on("end", () => {
-        const fieldNameStartIndex = fileData.indexOf('name="') + 'name="'.length
-        const fieldNameEndIndex = fileData.indexOf('"', fieldNameStartIndex)
-        const fieldName = fileData.substring(fieldNameStartIndex, fieldNameEndIndex)
+        const fieldStartIndex = fileData.indexOf('name="') + 'name="'.length
+        const fieldEndIndex = fileData.indexOf('"', fieldStartIndex)
+        const fieldName = fileData.substring(fieldStartIndex, fieldEndIndex)
 
         if (fieldName !== 'file') {
           return reject('Field input file is required')
         }
 
-        const originalNameStartIndex = fileData.indexOf('filename="') + 'filename="'.length
-        const originalNameEndIndex = fileData.indexOf('"', originalNameStartIndex)
-        const originalName = fileData.substring(originalNameStartIndex, originalNameEndIndex)
+        const typeStartIndex = fileData.indexOf('Content-Type: ') + 'Content-Type: '.length
+        const typeEndIndex = fileData.indexOf('\r', typeStartIndex)
+        const fileType = fileData.substring(typeStartIndex, typeEndIndex)
+
+        if (!['image/jpeg', 'image/png'].includes(fileType)) {
+          return reject('File extension type is invalid')
+        }
+
+        const nameStartIndex = fileData.indexOf('filename="') + 'filename="'.length
+        const nameEndIndex = fileData.indexOf('"', nameStartIndex)
+        const originalName = fileData.substring(nameStartIndex, nameEndIndex)
 
         const filePath = process.env.STORAGE_PATH || 'storage'
         const filePathResolved = path.resolve(filePath)
         const fileName = Math.floor(new Date().getTime() / 1000) + '-' + originalName
         const fileExt = fileName.split('.').pop().toLocaleLowerCase()
-        const allowedExtensions = ['jpg', 'jpeg', 'png']
+
+        const fileDataStart = fileData.indexOf('\r\n\r\n') + '\r\n\r\n'.length;
+        const decodedFileData = Buffer.from(fileData.substring(fileDataStart), 'binary');
 
         if (!fs.existsSync(path.resolve(filePathResolved))) {
           fs.mkdirSync(path.resolve(filePathResolved), { recursive: true });
         }
-
-        if (!allowedExtensions.includes(fileExt)) {
-          return reject('File extension type is invalid')
-        }
-
-        if (fileData.length <= 0) {
-          return reject('File content is empty')
-        }
-
-        const fileDataStart = fileData.indexOf('\r\n\r\n') + '\r\n\r\n'.length;
-        const decodedFileData = Buffer.from(fileData.substring(fileDataStart), 'binary');
 
         fs.writeFile(`${filePathResolved}/${fileName}`, decodedFileData, (err) => {
           if (err) {
@@ -83,6 +82,7 @@ export default class UploadController {
             resolve({
               path: filePath,
               name: fileName,
+              type: fileType,
               ext: fileExt
             })
           }

@@ -7,7 +7,7 @@ import assert from 'node:assert/strict'
 import UploadController from "../../src/controllers/upload.controller";
 import BadRequestError from "../../src/errors/bad-request.error"
 
-describe('Pages - Unit', async () => {
+describe('Upload - Unit', async () => {
   const env = process.env;
 
   before(() => {

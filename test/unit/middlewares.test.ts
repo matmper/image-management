@@ -20,6 +20,9 @@ describe('Middlewares - Unit', async () => {
     process.env = env
   });
 
+  /**
+   * Success
+   */
   test("basic auth middleware", async () => {
     const user = process.env.AUTH_USER
     const pass = process.env.AUTH_PASS
@@ -36,6 +39,9 @@ describe('Middlewares - Unit', async () => {
     assert.ok("Middleware Authenticated")
   })
 
+  /**
+   * Error: Empty authorizarion header
+   */
   test("basic auth middleware - not authorized (empty header)", async () => {
     try {
       const req = new mockHttp.Request({
@@ -49,6 +55,9 @@ describe('Middlewares - Unit', async () => {
     }
   })
 
+  /**
+   * Error: Invalid authorization header content
+   */
   test("basic auth middleware - not authorized (bearer type token)", async () => {
     try {
       const req = new mockHttp.Request({
@@ -64,6 +73,9 @@ describe('Middlewares - Unit', async () => {
     }
   })
 
+  /**
+   * Error: Invalid user
+   */
   test("basic auth middleware - not authorized (wrong user)", async () => {
     try {
       const user = faker.string.alphanumeric(5)
@@ -82,6 +94,9 @@ describe('Middlewares - Unit', async () => {
     }
   })
 
+  /**
+   * Error: Invalid password
+   */
   test("basic auth middleware - not authorized (wrong password)", async () => {
     try {
       const user = process.env.AUTH_USER

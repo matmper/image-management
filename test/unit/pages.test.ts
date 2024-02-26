@@ -3,6 +3,9 @@ import assert from 'node:assert/strict'
 import PageController from "../../src/controllers/page.controller";
 
 describe('Pages - Unit', async () => {
+  /**
+   * Success: Index
+   */
   test("page controller: index", async () => {
     const controller = new PageController
     const response = await controller.index()
@@ -16,6 +19,9 @@ describe('Pages - Unit', async () => {
     }))
   })
 
+  /**
+   * Success: Health Check
+   */
   test("page controller: healthcheck", async () => {
     const controller = new PageController
     const response = await controller.healthcheck()

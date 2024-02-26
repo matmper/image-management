@@ -4,6 +4,7 @@ import path from "node:path"
 import BasicAuthMiddleware from "../middleware/basic-auth.middleware"
 import ResponseDTO from "../types/response.dto"
 import BadRequestError from "../errors/bad-request.error"
+import Utils from "../helpers/utils.helper"
 
 export default class UploadController {
   /**
@@ -43,25 +44,17 @@ export default class UploadController {
       })
 
       req.on("end", () => {
-        const fieldStartIndex = fileData.indexOf('name="') + 'name="'.length
-        const fieldEndIndex = fileData.indexOf('"', fieldStartIndex)
-        const fieldName = fileData.substring(fieldStartIndex, fieldEndIndex)
+        const fieldName = Utils.substring(fileData, 'name="', '"')
+        const fileType =  Utils.substring(fileData, 'Content-Type: ', '\r')
+        const originalName = Utils.substring(fileData, 'filename="', '"')
 
         if (fieldName !== 'file') {
           return reject('Field input file is required')
         }
 
-        const typeStartIndex = fileData.indexOf('Content-Type: ') + 'Content-Type: '.length
-        const typeEndIndex = fileData.indexOf('\r', typeStartIndex)
-        const fileType = fileData.substring(typeStartIndex, typeEndIndex)
-
         if (!['image/jpeg', 'image/png'].includes(fileType)) {
           return reject('File extension type is invalid')
         }
-
-        const nameStartIndex = fileData.indexOf('filename="') + 'filename="'.length
-        const nameEndIndex = fileData.indexOf('"', nameStartIndex)
-        const originalName = fileData.substring(nameStartIndex, nameEndIndex)
 
         const filePath = process.env.STORAGE_PATH || 'storage'
         const filePathResolved = path.resolve(filePath)

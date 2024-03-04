@@ -6,6 +6,7 @@ import NotAuthorizedError from "../errors/not-authorized.error"
 import PageNotFoundError from "../errors/page-not-found.error"
 import RouteDTO from "../types/route.dto"
 import BadRequestError from "../errors/bad-request.error"
+import BasicAuthMiddleware from "../middleware/basic-auth.middleware"
 
 export default class Route {
   /**
@@ -33,6 +34,7 @@ export default class Route {
         }
 
         if (url === "/files") {
+          await BasicAuthMiddleware.handle(req)
           const controller = new FileController
           const message = await controller.show(req)
           return { code: 200, message: message }
@@ -42,6 +44,7 @@ export default class Route {
       // Routes: POST
       if (req.method === "POST") {
         if (url === "/files") {
+          await BasicAuthMiddleware.handle(req)
           const controller = new UploadController
           const message = await controller.store(req)
           return { code: 201, message: message }

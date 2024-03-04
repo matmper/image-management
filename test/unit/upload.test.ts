@@ -1,23 +1,19 @@
 import { after, before, describe, test } from "node:test"
-import { faker } from '@faker-js/faker'
 import path from "node:path"
 import fs from "node:fs"
 import mockHttp from 'mock-http'
 import assert from 'node:assert/strict'
 import UploadController from "../../src/controllers/upload.controller";
 import BadRequestError from "../../src/errors/bad-request.error"
+import config from "../../src/config/config"
+import Config from "../../src/helpers/config.helper"
 
 describe('Upload - Unit', async () => {
-  const env = process.env;
+  const cfg = JSON.parse(JSON.stringify(config))
 
   before(() => {
-    process.env = {
-      ...env,
-      AUTH_USER: faker.string.alphanumeric(10),
-      AUTH_PASS: faker.string.alphanumeric(20),
-      STORAGE_PATH: 'storage/test',
-      STORAGE_MAX_SIZE: '5'
-    }
+    Config.write('storage.default', 'local')
+    Config.write('storage.options.local.path', 'storage/test')
   })
 
   after(() => {
@@ -25,19 +21,18 @@ describe('Upload - Unit', async () => {
       fs.rmSync(path.resolve('storage/test'), { recursive: true, force: true })
     }
 
-    process.env = env;
+    Config.write('storage.default', cfg.storage.default)
+    Config.write('storage.options.local.path',  cfg.storage.options.local.path)
   })
 
   /**
    * Success Upload
    */
   test("upload controller: upload", async () => {
-    const authorization = 'Basic ' + Buffer.from(`${process.env.AUTH_USER}:${process.env.AUTH_PASS}`).toString('base64')
-    const image = Buffer.from(path.resolve('./test/mock/image.jpg'), 'utf-8')
+   const image = Buffer.from(path.resolve('./test/mock/image.jpg'), 'utf-8')
 
     const req = new mockHttp.Request({
       headers: {
-        'authorization': authorization,
         'content-length': image.length,
         'content-type': 'multipart/form-data; boundary=--------------------------659543434561705972292758',
       }
@@ -56,7 +51,7 @@ describe('Upload - Unit', async () => {
     assert.strictEqual(JSON.stringify(response), JSON.stringify({
       data: {
         file: {
-          path: process.env.STORAGE_PATH,
+          path: Config.read('storage.options.local.path'),
           name: response.data.file.name,
           type: 'image/jpeg',
           ext: 'jpg'
@@ -71,10 +66,7 @@ describe('Upload - Unit', async () => {
    */
   test("upload controller: bad request error (empty content header)", async () => {
     try {
-      const authorization = 'Basic ' + Buffer.from(`${process.env.AUTH_USER}:${process.env.AUTH_PASS}`).toString('base64')
-      const req = new mockHttp.Request({
-        headers: { 'authorization': authorization }
-      })
+      const req = new mockHttp.Request({})
       const controller = new UploadController
       await controller.store(req)
     } catch (error) {
@@ -88,9 +80,8 @@ describe('Upload - Unit', async () => {
    */
   test("upload controller: bad request error (invalid content type)", async () => {
     try {
-      const authorization = 'Basic ' + Buffer.from(`${process.env.AUTH_USER}:${process.env.AUTH_PASS}`).toString('base64')
       const req = new mockHttp.Request({
-        headers: { 'authorization': authorization, 'content-type': 'multipart/data' }
+        headers: { 'content-type': 'multipart/data' }
       })
       const controller = new UploadController
       await controller.store(req)
@@ -105,10 +96,8 @@ describe('Upload - Unit', async () => {
    */
   test("upload controller: bad request error (empty content length)", async () => {
     try {
-      const authorization = 'Basic ' + Buffer.from(`${process.env.AUTH_USER}:${process.env.AUTH_PASS}`).toString('base64')
       const req = new mockHttp.Request({
         headers: {
-          'authorization': authorization,
           'content-length': 0,
           'content-type': 'multipart/form-data;',
         }
@@ -126,10 +115,8 @@ describe('Upload - Unit', async () => {
    */
   test("upload controller: bad request error (empty content length)", async () => {
     try {
-      const authorization = 'Basic ' + Buffer.from(`${process.env.AUTH_USER}:${process.env.AUTH_PASS}`).toString('base64')
       const req = new mockHttp.Request({
         headers: {
-          'authorization': authorization,
           'content-length': 6 * 1024 * 1024,
           'content-type': 'multipart/form-data;',
         }
@@ -143,38 +130,13 @@ describe('Upload - Unit', async () => {
   })
 
   /**
-   * Error: Field input file is required
-   */
-  test("upload controller: error (wrong field name)", async () => {
-    try {
-      const authorization = 'Basic ' + Buffer.from(`${process.env.AUTH_USER}:${process.env.AUTH_PASS}`).toString('base64')
-      const req = new mockHttp.Request({
-        headers: {
-          'authorization': authorization,
-          'content-length': 1,
-          'content-type': 'multipart/form-data; boundary=--------------------------659543434561705972292758',
-        }
-      })
-      req.push(`--------------------------659543434561705972292758\r\n`)
-      req.push(`Content-Disposition: form-data; name="upload"; filename="image.jpg"\r\n`)
-      req.push(`\r\n--------------------------659543434561705972292758--\r\n`)
-      const controller = new UploadController
-      await controller.store(req)
-    } catch (error) {
-      assert.equal(error.message, 'Field input file is required')
-    }
-  })
-
-  /**
    * Error: File extension type is invalid
    */
   test("upload controller: error (invalid file extension)", async () => {
     try {
-      const authorization = 'Basic ' + Buffer.from(`${process.env.AUTH_USER}:${process.env.AUTH_PASS}`).toString('base64')
       const image = Buffer.from(path.resolve('./test/mock/index.html'), 'utf-8')
       const req = new mockHttp.Request({
         headers: {
-          'authorization': authorization,
           'content-length': image.length,
           'content-type': 'multipart/form-data; boundary=--------------------------659543434561705972292758',
         }

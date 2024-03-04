@@ -15,5 +15,3 @@ describe('Utils Helper - Unit', async () => {
     assert.equal(res, content)
   })
 })
-
-

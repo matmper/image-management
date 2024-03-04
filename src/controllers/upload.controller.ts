@@ -1,10 +1,11 @@
 import { IncomingMessage } from "http"
 import fs from "node:fs"
 import path from "node:path"
-import BasicAuthMiddleware from "../middleware/basic-auth.middleware"
 import ResponseDTO from "../types/response.dto"
 import BadRequestError from "../errors/bad-request.error"
 import Utils from "../helpers/utils.helper"
+import Config from "../helpers/config.helper"
+import FileDataDTO from "../types/filedata.dto"
 
 export default class UploadController {
   /**
@@ -13,16 +14,50 @@ export default class UploadController {
    * @returns Promise<ResponseDTO>
    */
   async store(req: IncomingMessage): Promise<ResponseDTO> {
-    const middleware = new BasicAuthMiddleware
-    await middleware.handle(req)
+    await this.validate(req)
 
+    return await new Promise((resolve, reject) => {
+      let fileChunk = ''
+
+      req.on("data", (chunk) => {
+        fileChunk += chunk
+      })
+
+      req.on("end", async () => {
+        try {
+          const filedata = await this.getFileData(fileChunk)
+          const file = await this.upload(filedata.buffer, filedata.data)
+          resolve(file)
+        } catch (error) {
+          reject(error.message)
+        }
+      })
+
+      req.on("error", (err) => {
+        reject(err.message)
+      })
+    })
+    .then((file) => {
+      return { data: { file }, meta: { } }
+    })
+    .catch((err) => {
+      throw new Error(err)
+    })
+  }
+
+  /**
+   * Validate request header and params
+   * @param req IncomingMessage
+   */
+  private async validate(req: IncomingMessage): Promise<void>
+  {
     if (req.headers['content-type'] === undefined) {
       throw new BadRequestError('Request content type header is required')
     }
 
     const contentType = req.headers['content-type'].split(';')[0]
     const contentLength = parseInt(req.headers['content-length'])
-    const maxFileSize = process.env.STORAGE_MAX_SIZE ? parseInt(process.env.STORAGE_MAX_SIZE) : 5 // Mb
+    const maxFileSize = parseInt(Config.read('storage.max_size').toString())
 
     if (contentType !== 'multipart/form-data') {
       throw new BadRequestError('Request content type is not valid')
@@ -35,65 +70,61 @@ export default class UploadController {
     if (contentLength > (1024 * 1024 * maxFileSize)) {
       throw new BadRequestError(`File size larger than allowed`)
     }
+  }
 
-    return await new Promise((resolve, reject) => {
-      let fileData = ''
+  /**
+   * Get file data and params
+   * @param fileChunk
+   */
+  private async getFileData(fileChunk: string): Promise<{
+    buffer: Buffer,
+    data: FileDataDTO
+  }> {
+    const fileType =  Utils.substring(fileChunk, 'Content-Type: ', '\r')
+    const originalName = Utils.substring(fileChunk, 'filename="', '"')
 
-      req.on("data", (chunk) => {
-        fileData += chunk
-      })
+    if (!['image/jpeg', 'image/png'].includes(fileType)) {
+      throw new Error('File extension type is invalid')
+    }
 
-      req.on("end", () => {
-        const fieldName = Utils.substring(fileData, 'name="', '"')
-        const fileType =  Utils.substring(fileData, 'Content-Type: ', '\r')
-        const originalName = Utils.substring(fileData, 'filename="', '"')
+    const filePath = Config.read('storage.options.local.path').toString()
+    const fileName = Math.floor(new Date().getTime()/1000) + '-' + originalName
+    const fileExt = fileName.split('.').pop().toLocaleLowerCase()
 
-        if (fieldName !== 'file') {
-          return reject('Field input file is required')
-        }
+    const fileChunkStart = fileChunk.indexOf('\r\n\r\n') + '\r\n\r\n'.length
+    const fileBuffer = Buffer.from(
+      fileChunk.substring(fileChunkStart),
+      'binary'
+    )
 
-        if (!['image/jpeg', 'image/png'].includes(fileType)) {
-          return reject('File extension type is invalid')
-        }
+    return {
+      buffer: fileBuffer,
+      data: { path: filePath, name: fileName, type: fileType, ext: fileExt }
+    }
+  }
 
-        const filePath = process.env.STORAGE_PATH || 'storage'
-        const filePathResolved = path.resolve(filePath)
-        const fileName = Math.floor(new Date().getTime() / 1000) + '-' + originalName
-        const fileExt = fileName.split('.').pop().toLocaleLowerCase()
+  /**
+   * Upload buffer into storage
+   * @param file Buffer
+   * @param filedata FileDataDTO
+   * @returns FileDataDTO
+   */
+  private async upload(
+    file: Buffer,
+    filedata: FileDataDTO
+  ): Promise<FileDataDTO> {
+    const pathResolved = path.resolve(filedata.path)
 
-        const fileDataStart = fileData.indexOf('\r\n\r\n') + '\r\n\r\n'.length;
-        const decodedFileData = Buffer.from(fileData.substring(fileDataStart), 'binary');
+    if (!fs.existsSync(path.resolve(pathResolved))) {
+      fs.mkdirSync(path.resolve(pathResolved), { recursive: true });
+    }
 
-        if (!fs.existsSync(path.resolve(filePathResolved))) {
-          fs.mkdirSync(path.resolve(filePathResolved), { recursive: true });
-        }
-
-        fs.writeFile(`${filePathResolved}/${fileName}`, decodedFileData, (err) => {
-          if (err) {
-            reject(err.message)
-          } else {
-            resolve({
-              path: filePath,
-              name: fileName,
-              type: fileType,
-              ext: fileExt
-            })
-          }
-        })
-      })
-
-      req.on("error", (err) => {
-        return reject(err.message)
-      })
+    fs.writeFile(`${pathResolved}/${filedata.name}`, file, async (error) => {
+      if (error) {
+        throw new Error(error.message)
+      }
     })
-      .then((file) => {
-        return {
-          data: { file },
-          meta: {}
-        }
-      })
-      .catch((err) => {
-        throw new Error(err)
-      })
+
+    return filedata
   }
 }

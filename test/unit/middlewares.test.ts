@@ -4,28 +4,28 @@ import mockHttp from 'mock-http'
 import assert from 'node:assert/strict'
 import BasicAuthMiddleware from "../../src/middleware/basic-auth.middleware"
 import NotAuthorizedError from "../../src/errors/not-authorized.error"
+import config from "../../src/config/config"
+import Config from "../../src/helpers/config.helper"
 
 describe('Middlewares - Unit', async () => {
-  const env = process.env;
+  const cfg = JSON.parse(JSON.stringify(config))
 
   before(() => {
-    process.env = {
-      ...env,
-      AUTH_USER: faker.string.alphanumeric(10),
-      AUTH_PASS: faker.string.alphanumeric(20)
-    }
+    Config.write('auth.user', faker.string.alphanumeric(10))
+    Config.write('auth.pass', faker.string.alphanumeric(20))
   })
 
   after(() => {
-    process.env = env
+    Config.write('auth.user', cfg.auth.user)
+    Config.write('auth.pass', cfg.auth.pass)
   });
 
   /**
    * Success
    */
   test("basic auth middleware", async () => {
-    const user = process.env.AUTH_USER
-    const pass = process.env.AUTH_PASS
+    const user = Config.read('auth.user')
+    const pass = Config.read('auth.pass')
 
     const req = new mockHttp.Request({
       headers: {
@@ -33,8 +33,7 @@ describe('Middlewares - Unit', async () => {
       }
     })
 
-    const middleware = new BasicAuthMiddleware
-    await middleware.handle(req)
+    await BasicAuthMiddleware.handle(req)
 
     assert.ok("Middleware Authenticated")
   })
@@ -48,8 +47,7 @@ describe('Middlewares - Unit', async () => {
         headers: {}
       })
 
-      const middleware = new BasicAuthMiddleware
-      await middleware.handle(req)
+      await BasicAuthMiddleware.handle(req)
     } catch (error) {
       assert.equal(error.name, NotAuthorizedError.name)
     }
@@ -66,8 +64,7 @@ describe('Middlewares - Unit', async () => {
         }
       })
 
-      const middleware = new BasicAuthMiddleware
-      await middleware.handle(req)
+      await BasicAuthMiddleware.handle(req)
     } catch (error) {
       assert.equal(error.name, NotAuthorizedError.name)
     }
@@ -79,7 +76,7 @@ describe('Middlewares - Unit', async () => {
   test("basic auth middleware - not authorized (wrong user)", async () => {
     try {
       const user = faker.string.alphanumeric(5)
-      const pass = process.env.AUTH_PASS
+      const pass = Config.read('auth.pass')
 
       const req = new mockHttp.Request({
         headers: {
@@ -87,8 +84,7 @@ describe('Middlewares - Unit', async () => {
         }
       })
 
-      const middleware = new BasicAuthMiddleware
-      await middleware.handle(req)
+      await BasicAuthMiddleware.handle(req)
     } catch (error) {
       assert.equal(error.name, NotAuthorizedError.name)
     }
@@ -99,7 +95,7 @@ describe('Middlewares - Unit', async () => {
    */
   test("basic auth middleware - not authorized (wrong password)", async () => {
     try {
-      const user = process.env.AUTH_USER
+      const user = Config.read('auth.user')
       const pass = faker.string.alphanumeric(5)
 
       const req = new mockHttp.Request({
@@ -108,8 +104,7 @@ describe('Middlewares - Unit', async () => {
         }
       })
 
-      const middleware = new BasicAuthMiddleware
-      await middleware.handle(req)
+      await BasicAuthMiddleware.handle(req)
     } catch (error) {
       assert.equal(error.name, NotAuthorizedError.name)
     }

@@ -1,5 +1,4 @@
 import { IncomingMessage } from "http"
-import BasicAuthMiddleware from "../middleware/basic-auth.middleware"
 import ResponseDTO from "../types/response.dto"
 
 export default class FileController {
@@ -9,9 +8,6 @@ export default class FileController {
    * @returns Promise<ResponseDTO>
    */
   async show(req: IncomingMessage): Promise<ResponseDTO> {
-    const middleware = new BasicAuthMiddleware
-    await middleware.handle(req)
-
-    return { data: { message: "success" }, meta: {} }
+    return { data: { readable: req.readable }, meta: {} }
   }
 }

@@ -119,11 +119,7 @@ export default class UploadController {
       fs.mkdirSync(path.resolve(pathResolved), { recursive: true });
     }
 
-    fs.writeFile(`${pathResolved}/${filedata.name}`, file, async (error) => {
-      if (error) {
-        throw new Error(error.message)
-      }
-    })
+    await fs.writeFileSync(`${pathResolved}/${filedata.name}`, file)
 
     return filedata
   }

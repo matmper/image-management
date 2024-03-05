@@ -24,20 +24,20 @@ export default class Route {
         if (url === "/") {
           const controller = new PageController
           const message = await controller.index()
-          return { code: 200, message: message }
+          return { message, code: 200 }
         }
 
         if (url === "/healthcheck") {
           const controller = new PageController
           const message = await controller.healthcheck()
-          return { code: 200, message: message }
+          return { message, code: 200 }
         }
 
         if (url === "/files") {
           await BasicAuthMiddleware.handle(req)
           const controller = new FileController
           const message = await controller.show(req)
-          return { code: 200, message: message }
+          return { message, code: 200 }
         }
       }
 
@@ -47,20 +47,25 @@ export default class Route {
           await BasicAuthMiddleware.handle(req)
           const controller = new UploadController
           const message = await controller.store(req)
-          return { code: 201, message: message }
+          return { message, code: 201 }
         }
       }
 
       throw new PageNotFoundError
     } catch (error) {
+      let code = 500
+
       if (error instanceof BadRequestError) {
-        return { code: 400, message: {data: {error: error.message}, meta: {code: 400}}}
+        code = 400
       } else if (error instanceof NotAuthorizedError) {
-        return { code: 403, message: {data: {error: "Not authorized"}, meta: {code: 403}}}
+        code = 403
       } else if (error instanceof PageNotFoundError) {
-        return { code: 404, message: {data: {error: "Page not found"}, meta: {code: 404}}}
-      } else {
-        return { code: 500, message: {data: {error: error.message}, meta: {code: 500}}}
+        code = 404
+      }
+
+      return {
+        message: { data: { error: error.message, code: code } },
+        code
       }
     }
   }

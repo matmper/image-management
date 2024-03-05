@@ -7,7 +7,7 @@ export default class FileController {
    * @param req
    * @returns Promise<ResponseDTO>
    */
-  async show(req: IncomingMessage): Promise<ResponseDTO> {
-    return { data: { readable: req.readable }, meta: {} }
+  async show(req: IncomingMessage): Promise<ResponseDTO<{readable: boolean}>> {
+    return { data: { readable: req.readable } }
   }
 }

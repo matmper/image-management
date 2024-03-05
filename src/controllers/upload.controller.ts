@@ -13,13 +13,13 @@ export default class UploadController {
    * @param req
    * @returns Promise<ResponseDTO>
    */
-  async store(req: IncomingMessage): Promise<ResponseDTO> {
+  async store(req: IncomingMessage): Promise<ResponseDTO<{file: FileDataDTO}>> {
     await this.validate(req)
 
-    return await new Promise((resolve, reject) => {
+    const file = await new Promise<FileDataDTO>((resolve, reject) => {
       let fileChunk = ''
 
-      req.on("data", (chunk) => {
+      req.on("data", (chunk: string) => {
         fileChunk += chunk
       })
 
@@ -33,16 +33,14 @@ export default class UploadController {
         }
       })
 
-      req.on("error", (err) => {
-        reject(err.message)
+      req.on("error", (error: Error) => {
+        reject(error.message)
       })
     })
-    .then((file) => {
-      return { data: { file }, meta: { } }
-    })
-    .catch((err) => {
-      throw new Error(err)
-    })
+    .then((file: FileDataDTO) => file)
+    .catch((err: string) => { throw new Error(err) })
+
+    return { data: { file } }
   }
 
   /**
@@ -119,7 +117,7 @@ export default class UploadController {
       fs.mkdirSync(path.resolve(pathResolved), { recursive: true });
     }
 
-    await fs.writeFileSync(`${pathResolved}/${filedata.name}`, file)
+    fs.writeFileSync(`${pathResolved}/${filedata.name}`, file)
 
     return filedata
   }

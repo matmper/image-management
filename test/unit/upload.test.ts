@@ -56,8 +56,7 @@ describe('Upload - Unit', async () => {
           type: 'image/jpeg',
           ext: 'jpg'
         },
-      },
-      meta: {}
+      }
     }))
   })
 

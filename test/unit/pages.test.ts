@@ -14,8 +14,7 @@ describe('Pages - Unit', async () => {
       data: {
         name: "image-management",
         version: "1.0"
-      },
-      meta: {}
+      }
     }))
   })
 
@@ -29,8 +28,7 @@ describe('Pages - Unit', async () => {
     assert.strictEqual(JSON.stringify(response), JSON.stringify({
       data: {
         success: true
-      },
-      meta: {}
+      }
     }))
   })
 })

@@ -2,7 +2,7 @@ import { describe, test } from "node:test"
 import assert from 'node:assert/strict'
 import PageController from "../../src/controllers/page.controller";
 
-describe('Pages - Unit', async () => {
+describe('Page - Unit', async () => {
   /**
    * Success: Index
    */

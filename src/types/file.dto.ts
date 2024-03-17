@@ -7,4 +7,4 @@ export interface FileDTO
   size: number;
 }
 
-export default FileDTO;
+export default FileDTO

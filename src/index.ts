@@ -1,7 +1,6 @@
-import http from "http"
+import http from "node:http"
 import Route from "./routes/route"
-import Config from "./helpers/config.helper";
-
+import Config from "./helpers/config.helper"
 
 // Check if exists values to basic auth (user and password)
 if (!Config.read('auth.user') || !Config.read('auth.pass')) {
@@ -10,13 +9,16 @@ if (!Config.read('auth.user') || !Config.read('auth.pass')) {
 
 // Create application http server
 const server = http.createServer(async (req: http.IncomingMessage, res: http.ServerResponse) => {
-  res.setHeader("Content-Type", "application/json");
-
   const response = new Route
   const json = await response.handle(req)
 
-  res.writeHead(json.code)
-  res.end(JSON.stringify(json.message))
+  if (json.message.headers) {
+    res.writeHead(json.code, json.message.headers)
+    res.end(json.message.data)
+  } else {
+    res.writeHead(json.code, { "Content-Type": "application/json" })
+    res.end(JSON.stringify(json.message))
+  }
 });
 
 const port = Config.read('app.port')

@@ -1,4 +1,5 @@
 import { after, before, describe, test } from "node:test"
+import { faker } from '@faker-js/faker'
 import path from "node:path"
 import fs from "node:fs"
 import mockHttp from 'mock-http'
@@ -30,20 +31,25 @@ describe('Upload - Unit', async () => {
    */
   test("upload controller: upload", async () => {
    const image = Buffer.from(path.resolve('./test/mock/image.jpg'), 'utf-8')
+   const pathMock = faker.string.alphanumeric(10)
 
     const req = new mockHttp.Request({
       headers: {
         'content-length': image.length,
-        'content-type': 'multipart/form-data; boundary=--------------------------659543434561705972292758',
+        'content-type': 'multipart/form-data; boundary=--------------------------203034927071618440094846',
       }
     })
 
-    req.push(`--------------------------659543434561705972292758\r\n`)
+    req.push(`----------------------------203034927071618440094846\r\n`)
     req.push(`Content-Disposition: form-data; name="file"; filename="image.jpg"\r\n`)
     req.push(`Content-Type: image/jpeg\r\n\r\n`)
-    req.push(image)
-    req.push(`\r\n--------------------------659543434561705972292758--\r\n`)
+    req.push(`${image}\r\n`)
+    req.push(`----------------------------203034927071618440094846\r\n`)
+    req.push(`Content-Disposition: form-data; name="path"\r\n\r\n`)
+    req.push(`${pathMock}\r\n`)
+    req.push(`----------------------------203034927071618440094846--\r\n`)
     req.push(null)
+
 
     const controller = new UploadController
     const response = await controller.store(req)
@@ -51,10 +57,7 @@ describe('Upload - Unit', async () => {
     assert.strictEqual(JSON.stringify(response), JSON.stringify({
       data: {
         file: {
-          path: Config.read('storage.options.local.path'),
-          name: response.data.file.name,
-          type: 'image/jpeg',
-          ext: 'jpg'
+          key: response.data.file.key,
         },
       }
     }))
@@ -133,19 +136,26 @@ describe('Upload - Unit', async () => {
    */
   test("upload controller: error (invalid file extension)", async () => {
     try {
-      const image = Buffer.from(path.resolve('./test/mock/index.html'), 'utf-8')
+      const html = Buffer.from(path.resolve('./test/mock/index.html'), 'utf-8')
+      const pathMock = faker.string.alphanumeric(10)
+
       const req = new mockHttp.Request({
         headers: {
-          'content-length': image.length,
-          'content-type': 'multipart/form-data; boundary=--------------------------659543434561705972292758',
+          'content-length': html.length,
+          'content-type': 'multipart/form-data; boundary=--------------------------203034927071618440094846',
         }
       })
-      req.push(`--------------------------659543434561705972292758\r\n`)
+
+      req.push(`----------------------------203034927071618440094846\r\n`)
       req.push(`Content-Disposition: form-data; name="file"; filename="index.html"\r\n`)
       req.push(`Content-Type: text/html\r\n\r\n`)
-      req.push(image)
-      req.push(`\r\n--------------------------659543434561705972292758--\r\n`)
+      req.push(`${html}\r\n`)
+      req.push(`----------------------------203034927071618440094846\r\n`)
+      req.push(`Content-Disposition: form-data; name="path"\r\n\r\n`)
+      req.push(`${pathMock}\r\n`)
+      req.push(`----------------------------203034927071618440094846--\r\n`)
       req.push(null)
+
       const controller = new UploadController
       await controller.store(req)
     } catch (error) {

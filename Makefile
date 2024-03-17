@@ -25,3 +25,11 @@ npm-install:
 
 npm-update:
 	docker exec $(CONTAINER) npm update
+
+npm-test:
+	docker exec $(CONTAINER) npm run test
+
+npm-lint:
+	docker exec $(CONTAINER) npm run lint
+
+check: npm-test npm-lint

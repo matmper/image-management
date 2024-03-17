@@ -2,10 +2,9 @@ import { IncomingMessage } from "http"
 import multiparty from "multiparty"
 import fs from "node:fs"
 import path from "node:path"
-import ResponseDTO from "../types/response.dto"
 import BadRequestError from "../errors/bad-request.error"
 import Config from "../helpers/config.helper"
-import FileDataDTO from "../types/filedata.dto"
+import ResponseDTO from "../types/response.dto"
 import FileDTO from "../types/file.dto"
 
 export default class UploadController {
@@ -14,7 +13,9 @@ export default class UploadController {
    * @param req
    * @returns Promise<ResponseDTO>
    */
-  async store(req: IncomingMessage): Promise<ResponseDTO<{file: FileDataDTO}>> {
+  async store(req: IncomingMessage): Promise<ResponseDTO<{
+    file: { key: string }
+  }>> {
     await this.validate(req)
 
     const fields = await this.getFormFields(req)
@@ -27,6 +28,7 @@ export default class UploadController {
   /**
    * Validate request header and params
    * @param req IncomingMessage
+   * @returns Promise<void>
    */
   private async validate(req: IncomingMessage): Promise<void> {
     if (req.headers['content-type'] === undefined) {
@@ -74,15 +76,18 @@ export default class UploadController {
           reject('Field "file" is required with one image')
         }
 
-        // if (!['image/jpeg', 'image/png'].includes(fileType)) {
-        //   reject('File extension type is invalid')
-        // }
+        const file: FileDTO = files.file[0]
+        const contentType: string = file.headers['content-type']
+
+        if (['image/jpeg', 'image/png'].includes(contentType) !== true) {
+          reject('File extension type is invalid')
+        }
 
         if (err) {
           reject(err.message)
         }
 
-        resolve({ file: files.file[0], path: fields.path[0] })
+        resolve({ file, path: fields.path[0] })
       })
     }).catch(error => {
       throw new BadRequestError(error)
@@ -100,23 +105,45 @@ export default class UploadController {
   private async upload(
     file: FileDTO,
     uploadPath: string
-  ): Promise<FileDataDTO> {
+  ): Promise<{ key: string }> {
     const storagePath = Config.read('storage.options.local.path').toString()
-    const pathResolved = path.resolve(`${storagePath}////${uploadPath}`)
+    const pathResolved = path.resolve(`${storagePath}/${uploadPath}`)
 
     if (!fs.existsSync(pathResolved)) {
       fs.mkdirSync(pathResolved, { recursive: true });
     }
 
     const buffer = fs.readFileSync(file.path)
+    const filename = this.getFilename(file.originalFilename)
 
-    fs.writeFileSync(`${pathResolved}/${file.originalFilename}`, buffer)
+    fs.writeFileSync(`${pathResolved}/${filename}`, buffer)
 
-    return {
-      path: uploadPath,
-      name: '',
-      type: '',
-      ext: ''
-    }
+    return { key: `${uploadPath}/${filename}` }
+  }
+
+  /**
+   * Create unique filename to upload
+   * @param originalFilename string
+   * @returns string
+   */
+  private getFilename(originalFilename: string): string {
+    const ext = originalFilename.split('.').pop()
+    const slug = originalFilename
+      .replace(`.${ext}`, '')
+      .normalize('NFD')
+      .toLowerCase()
+      .trim()
+      .replace(/_/g, '-')
+      .replace(/\s+/g, '-')
+      .replace(/--+/g, '-')
+      .replace(/[^\w-]+/g, '')
+
+    let filename = ''
+        filename += Math.floor(new Date().getTime()/1000)
+        filename += '-'
+        filename += slug
+        filename += `.${ext}`
+
+    return filename
   }
 }

@@ -18,7 +18,15 @@ export default class FileController {
     const storagePath = Config.read('storage.options.local.path').toString()
     const pathResolved = path.resolve(`${storagePath}/${params.key}`)
 
-    const file = await sharp(fs.readFileSync(pathResolved))
+    let getFile = null
+
+    try {
+      getFile = fs.readFileSync(pathResolved)
+    } catch (error) {
+      throw new BadRequestError(error.message)
+    }
+
+    const file = await sharp(getFile)
       .resize(params.width, params.height)
       .toBuffer()
 
@@ -48,7 +56,7 @@ export default class FileController {
     let width = null
     let height = null
 
-    if (!params.has('key')) {
+    if (!params.has('key') || params.get('key').length === 0) {
       throw new BadRequestError('Param "key" is required')
     }
 

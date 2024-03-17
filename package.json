@@ -19,7 +19,6 @@
   "license": "MIT",
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
-    "@types/node": "^20.11.19",
     "@typescript-eslint/eslint-plugin": "^7.0.2",
     "@typescript-eslint/parser": "^7.0.2",
     "eslint": "^8.57.0",
@@ -29,5 +28,9 @@
     "rimraf": "^5.0.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@types/node": "^20.11.28",
+    "multiparty": "^4.2.3"
   }
 }

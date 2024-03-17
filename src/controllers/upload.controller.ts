@@ -1,11 +1,12 @@
 import { IncomingMessage } from "http"
+import multiparty from "multiparty"
 import fs from "node:fs"
 import path from "node:path"
 import ResponseDTO from "../types/response.dto"
 import BadRequestError from "../errors/bad-request.error"
-import Utils from "../helpers/utils.helper"
 import Config from "../helpers/config.helper"
 import FileDataDTO from "../types/filedata.dto"
+import FileDTO from "../types/file.dto"
 
 export default class UploadController {
   /**
@@ -16,39 +17,18 @@ export default class UploadController {
   async store(req: IncomingMessage): Promise<ResponseDTO<{file: FileDataDTO}>> {
     await this.validate(req)
 
-    const file = await new Promise<FileDataDTO>((resolve, reject) => {
-      let fileChunk = ''
+    const fields = await this.getFormFields(req)
 
-      req.on("data", (chunk: string) => {
-        fileChunk += chunk
-      })
+    const upload = await this.upload(fields.file, fields.path)
 
-      req.on("end", async () => {
-        try {
-          const filedata = await this.getFileData(fileChunk)
-          const file = await this.upload(filedata.buffer, filedata.data)
-          resolve(file)
-        } catch (error) {
-          reject(error.message)
-        }
-      })
-
-      req.on("error", (error: Error) => {
-        reject(error.message)
-      })
-    })
-    .then((file: FileDataDTO) => file)
-    .catch((err: string) => { throw new Error(err) })
-
-    return { data: { file } }
+    return { data: { file: upload } }
   }
 
   /**
    * Validate request header and params
    * @param req IncomingMessage
    */
-  private async validate(req: IncomingMessage): Promise<void>
-  {
+  private async validate(req: IncomingMessage): Promise<void> {
     if (req.headers['content-type'] === undefined) {
       throw new BadRequestError('Request content type header is required')
     }
@@ -71,54 +51,72 @@ export default class UploadController {
   }
 
   /**
-   * Get file data and params
-   * @param fileChunk
+   * Parse and validate request body
+   * @param req IncomingMessage
+   * @returns Promise<{file: FileDTO, path: string}>
    */
-  private async getFileData(fileChunk: string): Promise<{
-    buffer: Buffer,
-    data: FileDataDTO
+  private async getFormFields(req: IncomingMessage): Promise<{
+    file: FileDTO,
+    path: string
   }> {
-    const fileType =  Utils.substring(fileChunk, 'Content-Type: ', '\r')
-    const originalName = Utils.substring(fileChunk, 'filename="', '"')
+    const form = new multiparty.Form()
 
-    if (!['image/jpeg', 'image/png'].includes(fileType)) {
-      throw new Error('File extension type is invalid')
-    }
+    return new Promise<{
+      file: FileDTO,
+      path: string
+    }>(function(resolve, reject): void {
+      form.parse(req, async function(err: Error, fields, files) {
+        if (fields.path === undefined || fields.path[0] === '') {
+          reject('Field "path" is required')
+        }
 
-    const filePath = Config.read('storage.options.local.path').toString()
-    const fileName = Math.floor(new Date().getTime()/1000) + '-' + originalName
-    const fileExt = fileName.split('.').pop().toLocaleLowerCase()
+        if (files.file === undefined || files.file.length !== 1) {
+          reject('Field "file" is required with one image')
+        }
 
-    const fileChunkStart = fileChunk.indexOf('\r\n\r\n') + '\r\n\r\n'.length
-    const fileBuffer = Buffer.from(
-      fileChunk.substring(fileChunkStart),
-      'binary'
-    )
+        // if (!['image/jpeg', 'image/png'].includes(fileType)) {
+        //   reject('File extension type is invalid')
+        // }
 
-    return {
-      buffer: fileBuffer,
-      data: { path: filePath, name: fileName, type: fileType, ext: fileExt }
-    }
+        if (err) {
+          reject(err.message)
+        }
+
+        resolve({ file: files.file[0], path: fields.path[0] })
+      })
+    }).catch(error => {
+      throw new BadRequestError(error)
+    }).then(result => {
+      return result
+    })
   }
 
   /**
    * Upload buffer into storage
-   * @param file Buffer
-   * @param filedata FileDataDTO
-   * @returns FileDataDTO
+   * @param file FileDTO
+   * @param uploadPath string
+   * @returns Promise<FileDataDTO>
    */
   private async upload(
-    file: Buffer,
-    filedata: FileDataDTO
+    file: FileDTO,
+    uploadPath: string
   ): Promise<FileDataDTO> {
-    const pathResolved = path.resolve(filedata.path)
+    const storagePath = Config.read('storage.options.local.path').toString()
+    const pathResolved = path.resolve(`${storagePath}////${uploadPath}`)
 
-    if (!fs.existsSync(path.resolve(pathResolved))) {
-      fs.mkdirSync(path.resolve(pathResolved), { recursive: true });
+    if (!fs.existsSync(pathResolved)) {
+      fs.mkdirSync(pathResolved, { recursive: true });
     }
 
-    fs.writeFileSync(`${pathResolved}/${filedata.name}`, file)
+    const buffer = fs.readFileSync(file.path)
 
-    return filedata
+    fs.writeFileSync(`${pathResolved}/${file.originalFilename}`, buffer)
+
+    return {
+      path: uploadPath,
+      name: '',
+      type: '',
+      ext: ''
+    }
   }
 }

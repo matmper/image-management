@@ -17,6 +17,7 @@ Personal study repository of an API for managing image files without using frame
 ## Requeriments
 - Docker
 - Docker Compose
+- GPU Makefile
 
 ## Installation for development
 
@@ -27,14 +28,12 @@ $ cp .env.example .env
 
 Start docker and run these commands:
 ```bash
-$ docker-compose build --no-cache
-$ docker-compose up --no-build -d
-$ docker exec image-management npm install
+$ make build
 ```
 
-Use `$ docker-compose up` to start or `$ docker-compose down` to stop
+Use `$ make up` to start or `$ make down` to stop
 
-To access a container folder run: `$ docker exec -it image-management bash`
+To access a container folder run: `$ make tty`
 
 ## Use
 

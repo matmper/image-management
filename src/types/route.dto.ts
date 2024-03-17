@@ -1,8 +1,8 @@
 import ResponseDTO from "./response.dto";
 
 interface RouteDTO {
-  code: number;
   message: ResponseDTO,
+  code: number;
 }
 
 export default RouteDTO;

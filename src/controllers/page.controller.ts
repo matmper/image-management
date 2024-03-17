@@ -5,13 +5,12 @@ export default class PageController {
    * Homepage method
    * @returns Promise<ResponseDTO>
    */
-  async index(): Promise<ResponseDTO> {
+  async index(): Promise<ResponseDTO<{name: string, version: string}>> {
     return {
       data: {
         name: "image-management",
         version: "1.0"
-      },
-      meta: {}
+      }
     }
   }
 
@@ -19,12 +18,11 @@ export default class PageController {
    * Health check method
    * @returns Promise<ResponseDTO>
    */
-  async healthcheck(): Promise<ResponseDTO> {
+  async healthcheck(): Promise<ResponseDTO<{ success: boolean }>> {
     return {
       data: {
         success: true
-      },
-      meta: {}
+      }
     }
   }
 }

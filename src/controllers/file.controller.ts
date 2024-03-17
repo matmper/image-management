@@ -1,5 +1,4 @@
 import { IncomingMessage } from "http"
-import BasicAuthMiddleware from "../middleware/basic-auth.middleware"
 import ResponseDTO from "../types/response.dto"
 
 export default class FileController {
@@ -8,22 +7,7 @@ export default class FileController {
    * @param req
    * @returns Promise<ResponseDTO>
    */
-  async show(req: IncomingMessage): Promise<ResponseDTO> {
-    const middleware = new BasicAuthMiddleware
-    await middleware.handle(req)
-
-    return { data: { message: "success" }, meta: {} }
-  }
-
-  /**
-   * Upload a new file
-   * @param req
-   * @returns Promise<ResponseDTO>
-   */
-  async store(req: IncomingMessage): Promise<ResponseDTO> {
-    const middleware = new BasicAuthMiddleware
-    await middleware.handle(req)
-
-    return { data: { message: "upload" }, meta: {} }
+  async show(req: IncomingMessage): Promise<ResponseDTO<{readable: boolean}>> {
+    return { data: { readable: req.readable } }
   }
 }

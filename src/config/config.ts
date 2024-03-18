@@ -1,5 +1,6 @@
 export default {
   'app': {
+    'version': '1.0.0',
     'env': process.env.APP_ENV || 'local',
     'port': process.env.APP_PORT || 3000,
   },

@@ -1,3 +1,4 @@
+import Config from "../helpers/config.helper"
 import ResponseDTO from "../types/response.dto"
 
 export default class PageController {
@@ -9,7 +10,7 @@ export default class PageController {
     return {
       data: {
         name: "image-management",
-        version: "1.0.0"
+        version: Config.read('app.version').toString(),
       }
     }
   }

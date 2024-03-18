@@ -1,5 +1,5 @@
 import { IncomingMessage } from "http";
-import NotAuthorizedError from "../errors/not-authorized.error";
+import UnauthorizedError from "../errors/unauthorized.error";
 import Config from "../helpers/config.helper";
 
 export default class BasicAuthMiddleware {
@@ -9,10 +9,17 @@ export default class BasicAuthMiddleware {
    * @returns Promise<boolean>
    */
   static async handle(req: IncomingMessage): Promise<boolean> {
+    // Check if exists values to basic auth (user and password)
+    if (!Config.read('auth.user') || !Config.read('auth.pass')) {
+      throw new Error(
+        'Configuration of AUTH_USER and AUTH_PASS is required into .env file'
+      )
+    }
+
     const auth = req.headers.authorization
 
     if (!auth || auth.indexOf('Basic ') === -1) {
-      throw new NotAuthorizedError
+      throw new UnauthorizedError
     }
 
     const [username, password] = Buffer
@@ -24,7 +31,7 @@ export default class BasicAuthMiddleware {
     const validPassword = password === Config.read('auth.pass')
 
     if (!validUsername || !validPassword) {
-      throw new NotAuthorizedError
+      throw new UnauthorizedError()
     }
 
     return true

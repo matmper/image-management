@@ -9,7 +9,7 @@ export default class PageController {
     return {
       data: {
         name: "image-management",
-        version: "1.0"
+        version: "1.0.0"
       }
     }
   }

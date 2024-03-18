@@ -10,9 +10,12 @@ export default class CorsMiddleware {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET, POST');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader(
-      'Access-Control-Allow-Headers',
-      'Authorization, Accept, Content-Type, Content-Length'
-    );
+    res.setHeader('Access-Control-Allow-Headers', [
+      'Authorization',
+      'Accept',
+      'Access-Control-Request-Method',
+      'Content-Type',
+      'Content-Length',
+    ]);
   }
 }

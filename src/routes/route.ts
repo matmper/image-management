@@ -53,6 +53,21 @@ export default class Route {
         }
       }
 
+      // Routes: OPTIONS
+      if (req.method === "OPTIONS") {
+        const reqHeader: string = req.headers['access-control-request-method']
+        const allowedMethods: Record<string, Array<string>> = {
+          '/files': ['GET', 'POST']
+        }
+        try {
+          if (allowedMethods[url].includes(reqHeader)) {
+            return { message: { data: { } }, code: 200 }
+          }
+        } catch (error) {
+          throw new PageNotFoundError
+        }
+      }
+
       throw new PageNotFoundError
     } catch (error) {
       let code = 500

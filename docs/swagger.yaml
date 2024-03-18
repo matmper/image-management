@@ -1,0 +1,221 @@
+openapi: 3.1.0
+info:
+  title: Image Management
+  description: Application route documentation
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# PATHS
+paths:
+  /:
+    # [GET] /
+    get:
+      summary: Home Page
+      description: Basic application information
+      tags:
+        - Default
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        example: image-management
+                      version:
+                        type: string
+                        example: "1.0"
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+  /healthcheck:
+    # [GET] /healthcheck
+    get:
+      summary: Check server health status
+      description: Returns a message indicating that the server is working correctly.
+      tags:
+        - Health
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      success:
+                        type: bool
+                        example: true
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+  /files:
+    # [GET] /files
+    get:
+      summary: Get Image
+      description: Capture an image on the server
+      tags:
+        - Files
+      security:
+        - basicAuth: []
+      parameters:
+        - in: query
+          name: key
+          required: true
+          schema:
+            type: string
+          description: File key (path and name)
+        - in: query
+          name: w
+          schema:
+            type: integer
+          description: Width to resize
+        - in: query
+          name: h
+          schema:
+            type: integer
+          description: Height to resize
+      responses:
+        '200':
+          description: OK
+          content:
+              image/jpeg:
+                schema:
+                type: string
+                format: binary
+                example: "/9j/4AAQSkZJRgABAQAAAQABAAD/AAAAA..."
+        '400':
+          $ref: '#/components/responses/BadRequestResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+    # [POST] /files
+    post:
+      summary: Image Upload
+      description: Upload an image to the server
+      tags:
+        - Files
+      security:
+        - basicAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Image file
+                path:
+                  type: string
+                  description: Image upload path
+      responses:
+        '201':
+          description: OK
+          content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    data:
+                      type: object
+                      properties:
+                        file:
+                          type: object
+                          properties:
+                            key:
+                              type: string
+                              example: "path/filename.jpg"
+        '400':
+          $ref: '#/components/responses/BadRequestResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# COMPONENTS
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+  responses:
+    BadRequestResponse:
+      description: Bad Request Error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Field path is required"
+                  code:
+                    type: integer
+                    example: 400
+    UnauthorizedResponse:
+      description: Unauthorized Error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized"
+                  code:
+                    type: integer
+                    example: 401
+    NotFoundResponse:
+      description: Not Found Error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Page not found"
+                  code:
+                    type: integer
+                    example: 404
+    InternalServerErrorResponse:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Error message"
+                  code:
+                    type: integer
+                    example: 500

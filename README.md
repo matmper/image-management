@@ -35,18 +35,21 @@ Use `$ make up` to start or `$ make down` to stop
 
 To access a container folder run: `$ make tty`
 
-## Use
-
-Make an HTTP request in localhost on the configured port (default 3000), example:
-
-```bash
-$ curl --location --request POST 'http://localhost:3000/'
-```
-
 ## Documentation
 
-Coming soon with Swagger!
+Use Swager UI to access documentation located at `./docs/swagger.yml`
 
+http://localhost:80/
+
+To change the default ports, change the variables in the `.env`:
+
+```bash
+# Application Port
+DOCKER_CONTAINER_PORT=3000 
+
+# Swagger UI Port
+DOCKER_SWAGGER_PORT=80 
+```
 ---
 
 This repository use [MIT License](https://choosealicense.com/licenses/mit/)

@@ -69,22 +69,22 @@ export default class UploadController {
     }>(function(resolve, reject): void {
       form.parse(req, async function(err: Error, fields, files) {
         if (fields.path === undefined || fields.path[0] === '') {
-          reject('Field "path" is required')
+          return reject('Field "path" is required')
         }
 
         if (files.file === undefined || files.file.length !== 1) {
-          reject('Field "file" is required with one image')
+          return reject('Field "file" is required with one image')
         }
 
         const file: FileDTO = files.file[0]
         const contentType: string = file.headers['content-type']
 
         if (['image/jpeg', 'image/png'].includes(contentType) !== true) {
-          reject('File extension type is invalid')
+          return reject('File extension type is invalid')
         }
 
         if (err) {
-          reject(err.message)
+          return reject(err.message)
         }
 
         resolve({ file, path: fields.path[0] })

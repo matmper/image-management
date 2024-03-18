@@ -1,22 +1,24 @@
-import { IncomingMessage } from "http"
+import { IncomingMessage, ServerResponse } from "http"
 import FileController from "../controllers/file.controller"
 import PageController from "../controllers/page.controller"
 import UploadController from "../controllers/upload.controller"
-import NotAuthorizedError from "../errors/not-authorized.error"
+import UnauthorizedError from "../errors/unauthorized.error"
 import PageNotFoundError from "../errors/page-not-found.error"
 import RouteDTO from "../types/route.dto"
 import BadRequestError from "../errors/bad-request.error"
 import BasicAuthMiddleware from "../middleware/basic-auth.middleware"
+import CorsMiddleware from "../middleware/cors.middleware"
 
 export default class Route {
   /**
    * API Routes
-   * @param req any
-   * @param res any
+   * @param req IncomingMessage
    * @returns Promise<RouteDTO>
    */
-  async handle(req: IncomingMessage): Promise<RouteDTO> {
+  async handle(req: IncomingMessage, res: ServerResponse): Promise<RouteDTO> {
     try {
+      CorsMiddleware.handle(res)
+
       const url = req.url.split('?')[0]
 
       // Routes: GET
@@ -57,8 +59,8 @@ export default class Route {
 
       if (error instanceof BadRequestError) {
         code = 400
-      } else if (error instanceof NotAuthorizedError) {
-        code = 403
+      } else if (error instanceof UnauthorizedError) {
+        code = 401
       } else if (error instanceof PageNotFoundError) {
         code = 404
       }

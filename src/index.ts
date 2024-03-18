@@ -2,17 +2,15 @@ import http from "node:http"
 import Route from "./routes/route"
 import Config from "./helpers/config.helper"
 
-// Check if exists values to basic auth (user and password)
-if (!Config.read('auth.user') || !Config.read('auth.pass')) {
-  throw new Error('Configuration of AUTH_USER and AUTH_PASS is required into .env file')
-}
-
 // Create application http server
-const server = http.createServer(async (req: http.IncomingMessage, res: http.ServerResponse) => {
+const server = http.createServer(async (
+  req: http.IncomingMessage,
+  res: http.ServerResponse
+) => {
   const response = new Route
-  const json = await response.handle(req)
+  const json = await response.handle(req, res)
 
-  if (json.message.headers) {
+  if (Buffer.isBuffer(json.message.data)) {
     res.writeHead(json.code, json.message.headers)
     res.end(json.message.data)
   } else {

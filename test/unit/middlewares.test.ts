@@ -3,7 +3,7 @@ import { faker } from '@faker-js/faker'
 import mockHttp from 'mock-http'
 import assert from 'node:assert/strict'
 import BasicAuthMiddleware from "../../src/middleware/basic-auth.middleware"
-import NotAuthorizedError from "../../src/errors/not-authorized.error"
+import UnauthorizedError from "../../src/errors/unauthorized.error"
 import config from "../../src/config/config"
 import Config from "../../src/helpers/config.helper"
 
@@ -41,7 +41,7 @@ describe('Middlewares - Unit', async () => {
   /**
    * Error: Empty authorizarion header
    */
-  test("basic auth middleware - not authorized (empty header)", async () => {
+  test("basic auth middleware - unauthorized (empty header)", async () => {
     try {
       const req = new mockHttp.Request({
         headers: {}
@@ -49,14 +49,14 @@ describe('Middlewares - Unit', async () => {
 
       await BasicAuthMiddleware.handle(req)
     } catch (error) {
-      assert.equal(error.name, NotAuthorizedError.name)
+      assert.equal(error.name, UnauthorizedError.name)
     }
   })
 
   /**
    * Error: Invalid authorization header content
    */
-  test("basic auth middleware - not authorized (bearer type token)", async () => {
+  test("basic auth middleware - unauthorized (bearer type token)", async () => {
     try {
       const req = new mockHttp.Request({
         headers: {
@@ -66,14 +66,14 @@ describe('Middlewares - Unit', async () => {
 
       await BasicAuthMiddleware.handle(req)
     } catch (error) {
-      assert.equal(error.name, NotAuthorizedError.name)
+      assert.equal(error.name, UnauthorizedError.name)
     }
   })
 
   /**
    * Error: Invalid user
    */
-  test("basic auth middleware - not authorized (wrong user)", async () => {
+  test("basic auth middleware - unauthorized (wrong user)", async () => {
     try {
       const user = faker.string.alphanumeric(5)
       const pass = Config.read('auth.pass')
@@ -86,14 +86,14 @@ describe('Middlewares - Unit', async () => {
 
       await BasicAuthMiddleware.handle(req)
     } catch (error) {
-      assert.equal(error.name, NotAuthorizedError.name)
+      assert.equal(error.name, UnauthorizedError.name)
     }
   })
 
   /**
    * Error: Invalid password
    */
-  test("basic auth middleware - not authorized (wrong password)", async () => {
+  test("basic auth middleware - unauthorized (wrong password)", async () => {
     try {
       const user = Config.read('auth.user')
       const pass = faker.string.alphanumeric(5)
@@ -106,7 +106,7 @@ describe('Middlewares - Unit', async () => {
 
       await BasicAuthMiddleware.handle(req)
     } catch (error) {
-      assert.equal(error.name, NotAuthorizedError.name)
+      assert.equal(error.name, UnauthorizedError.name)
     }
   })
 })

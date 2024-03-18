@@ -1,6 +1,7 @@
 import { describe, test } from "node:test"
 import assert from 'node:assert/strict'
 import PageController from "../../src/controllers/page.controller";
+import Config from "../../src/helpers/config.helper";
 
 describe('Page - Unit', async () => {
   /**
@@ -13,7 +14,7 @@ describe('Page - Unit', async () => {
     assert.strictEqual(JSON.stringify(response), JSON.stringify({
       data: {
         name: "image-management",
-        version: "1.0"
+        version: Config.read('app.version').toString()
       }
     }))
   })

@@ -15,10 +15,10 @@ export default class FileController {
   async show(req: IncomingMessage): Promise<ResponseDTO> {
     const params = await this.validate(req)
 
-    const storagePath = Config.read('storage.options.local.path').toString()
-    const pathResolved = path.resolve(`${storagePath}/${params.key}`)
+    const storagePath: string = Config.read('storage.options.local.path').toString()
+    const pathResolved: string = path.resolve(`${storagePath}/${params.key}`)
 
-    let getFile = null
+    let getFile: Buffer
 
     try {
       getFile = fs.readFileSync(pathResolved)
@@ -26,11 +26,11 @@ export default class FileController {
       throw new BadRequestError(error.message)
     }
 
-    const file = await sharp(getFile)
+    const file: Buffer = await sharp(getFile)
       .resize(params.width, params.height)
       .toBuffer()
 
-    const headers = this.getHeaders(file, params.key)
+    const headers: OutgoingHttpHeader[] = this.getHeaders(file, params.key)
 
     return { data: file, headers }
   }
@@ -45,7 +45,7 @@ export default class FileController {
     width: number | null,
     height: number | null,
   }> {
-    const queryString = req.url.split('?')
+    const queryString: string[] = req.url.split('?')
 
     if (queryString[1] === undefined) {
       throw new BadRequestError('No query string found')
@@ -53,8 +53,8 @@ export default class FileController {
 
     const params = new URLSearchParams(queryString[1])
 
-    let width = null
-    let height = null
+    let width: number|null = null
+    let height: number|null = null
 
     if (!params.has('key') || params.get('key').length === 0) {
       throw new BadRequestError('Param "key" is required')
@@ -86,7 +86,7 @@ export default class FileController {
    * @returns OutgoingHttpHeader[]
    */
   private getHeaders(file: Buffer, key: string): OutgoingHttpHeader[] {
-    let contentType = ''
+    let contentType: string = ''
 
     switch (key.split('.').pop().toLowerCase()) {
       case 'png':

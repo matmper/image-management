@@ -35,9 +35,10 @@ export default class UploadController {
       throw new BadRequestError('Request content type header is required')
     }
 
-    const contentType = req.headers['content-type'].split(';')[0]
-    const contentLength = parseInt(req.headers['content-length'])
-    const maxFileSize = parseInt(Config.read('storage.max_size').toString())
+    const contentType: string = req.headers['content-type'].split(';')[0]
+    const contentLength: number = parseInt(req.headers['content-length'])
+    const maxFileSize: number = parseInt(Config.read('storage.max_size')
+      .toString())
 
     if (contentType !== 'multipart/form-data') {
       throw new BadRequestError('Request content type is not valid')
@@ -106,15 +107,16 @@ export default class UploadController {
     file: FileDTO,
     uploadPath: string
   ): Promise<{ key: string }> {
-    const storagePath = Config.read('storage.options.local.path').toString()
-    const pathResolved = path.resolve(`${storagePath}/${uploadPath}`)
+    const storagePath: string = Config.read('storage.options.local.path')
+      .toString()
+    const pathResolved: string = path.resolve(`${storagePath}/${uploadPath}`)
 
     if (!fs.existsSync(pathResolved)) {
       fs.mkdirSync(pathResolved, { recursive: true });
     }
 
-    const buffer = fs.readFileSync(file.path)
-    const filename = this.getFilename(file.originalFilename)
+    const buffer: Buffer = fs.readFileSync(file.path)
+    const filename: string = this.getFilename(file.originalFilename)
 
     fs.writeFileSync(`${pathResolved}/${filename}`, buffer)
 
@@ -127,8 +129,8 @@ export default class UploadController {
    * @returns string
    */
   private getFilename(originalFilename: string): string {
-    const ext = originalFilename.split('.').pop()
-    const slug = originalFilename
+    const ext: string = originalFilename.split('.').pop()
+    const slug: string = originalFilename
       .replace(`.${ext}`, '')
       .normalize('NFD')
       .toLowerCase()
